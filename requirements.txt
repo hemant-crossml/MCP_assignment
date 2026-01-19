@@ -1,5 +1,5 @@
-langchain-google-genai
-langchain
-langchain-mcp-adapters
-fastmcp
-python-dotenv
+langchain-google-genai==4.2.0
+langchain==1.2.6
+langchain-mcp-adapters==0.2.1
+fastmcp==2.14.3
+python-dotenv==1.2.1

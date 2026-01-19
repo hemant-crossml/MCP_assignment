@@ -1,45 +1,65 @@
-import os
-from langchain_mcp_adapters.client import MultiServerMCPClient  
-from langchain.agents import create_agent
+"""
+Client and Model Initialization Module
+
+This module initializes and exposes:
+- A MultiServer MCP client used to communicate with the corporate MCP server.
+- A Google Gemini language model configured with application settings.
+
+Both objects are created at import time and are intended to be reused
+across the application.
+"""
+
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from dotenv import load_dotenv
-import asyncio
+from cred import GEMINI_API_KEY
+from config import *
+from logger_config import setup_logger
 
 
-load_dotenv()
-gemini_api_key=os.getenv("GEMINI_API_KEY","")
+logger = setup_logger(__name__)
 
 
-async def main():
-    client = MultiServerMCPClient(  
+try:
+    logger.info("Initializing MultiServer MCP client")
+
+    client = MultiServerMCPClient(
         {
-            "math": {
-                "transport": "stdio",  # Local subprocess communication
+            "corporate_system": {
                 "command": "python",
-                # Absolute path to your math_server.py file
-                "args": ["mathserver.py"],
-            },
-            "weather": {
-                "transport": "streamable_http",  # HTTP-based remote server
-                # Ensure you start your weather server on port 8000
-                "url": "http://localhost:8000/mcp",
+                "args": ["corporate_mcp_server.py"],
+                "transport": "stdio"
             }
         }
     )
-    tools =  await client.get_tools() 
-    model = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash-lite",
-        api_key=gemini_api_key
-    ) 
-    agent = create_agent(
-        model=model,
-        tools=tools 
-    )
-    math_response =  await agent.ainvoke(
-        {"messages": [{"role": "user", "content": "what's (3 + 5) x 12?"}]}
-    )
-    
-    print("Maths response:", math_response['messages'][-1].content)
 
-asyncio.run(main())
+    logger.info("MultiServer MCP client initialized successfully")
+    logger.debug("MCP client configured for corporate_system via stdio")
+
+except Exception:
+    logger.exception("Failed to initialize MultiServer MCP client")
+    raise
+
+
+try:
+    logger.info("Initializing Google Gemini language model")
+
+    model = ChatGoogleGenerativeAI(
+        model=MODEL_ID,
+        api_key=GEMINI_API_KEY,
+        temperature=TEMPERATURE,
+        top_p=TOP_P,
+        top_k=TOP_K,
+        max_output_tokens=MAX_TOKEN,  # output length cap
+    )
+
+    logger.info("Google Gemini language model initialized successfully")
+    logger.debug(
+        "Model configuration loaded "
+        f"(MODEL_ID={MODEL_ID}, TEMPERATURE={TEMPERATURE}, "
+        f"TOP_P={TOP_P}, TOP_K={TOP_K}, MAX_TOKEN={MAX_TOKEN})"
+    )
+
+except Exception:
+    logger.exception("Failed to initialize Google Gemini language model")
+    raise
