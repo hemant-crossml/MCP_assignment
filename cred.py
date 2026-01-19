@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 from logger_config import setup_logger
