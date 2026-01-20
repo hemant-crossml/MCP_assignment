@@ -8,6 +8,7 @@ This module initializes and exposes:
 Both objects are created at import time and are intended to be reused
 across the application.
 """
+import os
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -22,12 +23,13 @@ logger = setup_logger(__name__)
 
 try:
     logger.info("Initializing MultiServer MCP client")
+    server_path = os.path.abspath("corporate_mcp_server.py")
 
     client = MultiServerMCPClient(
         {
             "corporate_system": {
                 "command": "python",
-                "args": ["corporate_mcp_server.py"],
+                "args": [server_path],
                 "transport": "stdio"
             }
         }
